@@ -1,0 +1,106 @@
+on:
+  push:
+    paths-ignore:
+      - 'ci/**'
+
+  pull_request:
+
+name: CI
+jobs:
+  build:
+    name: Build container image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Guix cache
+        uses: actions/cache@v2
+        with:
+          # Note: /gnu/store may exceed the limit of 5GiB, so don't
+          # cache it.  TODO: Selective caching with 'guix archive'?
+          path: |
+            ~/.cache/guix
+          key: guix-cache-${{ github.sha }}
+          restore-keys: |
+            guix-cache-
+      - name: Read channels.scm
+        run: |
+          echo "CHANNELS<<EOF" >> $GITHUB_ENV
+          cat ci/channels.scm >> $GITHUB_ENV
+          echo EOF >> $GITHUB_ENV
+      - name: Install Guix
+        uses: PromyLOPH/guix-install-action@v1
+        with:
+          channels: "${{ env.CHANNELS }}"
+      - name: Build Nivlheim
+        run: >
+          guix build nivlheim
+          --with-source=nivlheim=$PWD
+          --with-input=go@1.14=go@1.16
+      - name: Pack container image
+        run: >
+          guix pack -f docker --root=nivlheim-image.tar.gz
+          --entry-point=bin/nivlheim
+          -S /etc/profile=etc/profile
+          --with-source=nivlheim=$PWD
+          --with-input=go@1.14=go@1.16
+          nivlheim
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: nivlheim-image.tar.gz
+          path: nivlheim-image.tar.gz
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: nivlheim-image.tar.gz
+      - name: Load image
+        run: docker load < nivlheim-image.tar.gz
+      - name: Log in to registry
+        run: >
+          echo "${{ secrets.GITHUB_TOKEN }}"
+          | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Push image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/nivlheim
+          docker tag nivlheim:latest $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
+
+  live:
+    name: Live
+    needs: publish
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:11
+        env:
+          POSTGRES_USER: nivlheim
+          POSTGRES_DB: nivlheim
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      nivlheim:
+        image: ghcr.io/${{ github.repository_owner }}/nivlheim:latest
+        env:
+          NIVLHEIM_PGHOST: postgres
+          NIVLHEIM_PGUSER: nivlheim
+          NIVLHEIM_PGPASSWORD: postgres
+          NIVLHEIM_PGDATABASE: nivlheim
+          NIVLHEIM_PGSSLMODE: disable
+          NIVLHEIM_HTTPLISTENADDRESS: :4040
+        ports:
+          - 4040:4040
+    steps:
+      - run: curl http://localhost:4040/api/v2/status
