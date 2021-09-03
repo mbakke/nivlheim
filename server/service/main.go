@@ -134,9 +134,24 @@ func main() {
 	// Determine capabilities of the database server
 	postgresSupportsOnConflict = false
 	var version sql.NullString
-	err = db.QueryRow("select version()").Scan(&version)
+
+	// Delay the initial query in case the database is not up yet.
+	var backOffSchedule = []time.Duration{
+		1 * time.Second,
+		3 * time.Second,
+		10 * time.Second,
+	}
+	for _, backoff := range backOffSchedule {
+		err = db.QueryRow("select version()").Scan(&version)
+		if err == nil {
+			break
+		}
+		log.Printf("Database connection failed.  Retrying in %d seconds.\n",
+			backoff / time.Second)
+		time.Sleep(backoff)
+	}
 	if err != nil {
-		log.Println(err)
+		log.Printf("Failed to connect to database: %v\n", err)
 		return
 	}
 	if version.Valid {
