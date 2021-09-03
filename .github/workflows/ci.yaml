@@ -65,7 +65,7 @@ jobs:
         run: docker load < nivlheim-image.tar.gz
       - name: Determine tag name
         id: get-tag
-        run:
+        run: |
           if [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
             TAG_NAME=latest
           else
