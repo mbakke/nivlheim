@@ -1,8 +1,5 @@
 on:
   push:
-    paths-ignore:
-      - 'ci/**'
-
   pull_request:
 
 name: CI
@@ -52,6 +49,7 @@ jobs:
           path: nivlheim-image.tar.gz
 
   publish:
+    if: ${{ github.ref == 'refs/heads/master' || contains('refs/tags/', github.ref) }}
     name: Publish
     needs: build
     runs-on: ubuntu-latest
