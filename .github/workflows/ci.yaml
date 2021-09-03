@@ -1,9 +1,4 @@
-on:
-  push:
-    paths-ignore:
-      - 'ci/**'
-
-  pull_request:
+on: [push, pull_request]
 
 name: CI
 jobs:
@@ -52,6 +47,7 @@ jobs:
           path: nivlheim-image.tar.gz
 
   publish:
+    if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
     name: Publish
     needs: build
     runs-on: ubuntu-latest
@@ -72,8 +68,14 @@ jobs:
       - name: Push image
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/nivlheim
-          docker tag nivlheim:latest $IMAGE_ID:latest
-          docker push $IMAGE_ID:latest
+          if [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
+            TAG_NAME=latest
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          fi
+
+          docker tag nivlheim:latest "$IMAGE_ID:$TAG_NAME"
+          docker push "$IMAGE_ID:$TAG_NAME"
 
   live:
     name: Live
