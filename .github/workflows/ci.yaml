@@ -5,6 +5,20 @@ jobs:
   build:
     name: Build container image
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:11
+        env:
+          POSTGRES_USER: nivlheim
+          POSTGRES_DB: nivlheim
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -32,6 +46,23 @@ jobs:
           guix build nivlheim
           --with-source=nivlheim=$PWD
           --with-input=go@1.14=go@1.16
+      - name: Start server
+        run: >
+          $(guix build nivlheim
+          --with-source=nivlheim=$PWD
+          --with-input=go@1.14=go@1.16)/bin/nivlheim
+          --dev &
+        env:
+          NIVLHEIM_PGHOST: localhost
+          NIVLHEIM_PGUSER: nivlheim
+          NIVLHEIM_PGPASSWORD: postgres
+          NIVLHEIM_PGDATABASE: nivlheim
+          NIVLHEIM_PGSSLMODE: disable
+      - name: Test API
+        run: |
+          # Give the server some time to initialize.
+          sleep 5
+          curl http://localhost:4040/api/v2/status
       - name: Pack container image
         run: >
           guix pack -f docker --root=nivlheim-image.tar.gz
