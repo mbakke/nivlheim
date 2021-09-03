@@ -66,7 +66,7 @@ jobs:
       - name: Determine tag name
         id: get-tag
         run:
-          if [[ "$GITHUB_REF" == "^refs/heads/master"]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
             TAG_NAME=latest
           else
             TAG_NAME="${GITHUB_REF#refs/tags/}"
