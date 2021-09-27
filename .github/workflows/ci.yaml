@@ -128,13 +128,17 @@ jobs:
     needs: [build, buildwww]
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout
+      uses: actions/checkout@v2
     - name: Download artifacts
       uses: actions/download-artifact@v2
+      with:
+        path: artifacts
       # the name input parameter is not provided, so all artifacts will be downloaded
     - name: Load images
       run: |
-        docker load --input nivlheim-www.tar.gz
-        docker load --input nivlheim-image.tar.gz
+        docker load --input artifacts/nivlheim-www.tar.gz
+        docker load --input artifacts/nivlheim-image.tar.gz
     - name: Start containers
       run: docker-compose -f "docker/docker-compose-for-actions.yml" up
     - name: Run a test
