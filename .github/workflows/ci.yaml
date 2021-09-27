@@ -138,9 +138,11 @@ jobs:
         docker load --input nivlheim-www.tar.gz/nivlheim-www.tar.gz
         docker load --input nivlheim-image.tar.gz/nivlheim-image.tar.gz
     - name: Start containers
-      run: docker-compose -f "docker/docker-compose-for-actions.yml" up
+      run: docker-compose -f "docker/docker-compose-for-actions.yml" -d up
     - name: Run a test
       run: curl -k https://localhost/api/v2/status
+    - name: Retrieve logs from Docker
+      run: docker-compose logs
     - name: Stop containers
       if: always()
       run: docker-compose -f "docker/docker-compose-for-actions.yml" down
