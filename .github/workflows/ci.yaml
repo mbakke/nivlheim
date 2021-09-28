@@ -139,6 +139,8 @@ jobs:
         docker load --input nivlheim-image.tar.gz/nivlheim-image.tar.gz
     - name: Start containers
       run: docker-compose -f "docker/docker-compose-for-actions.yml" up -d
+    - name: Test SSL
+      run: openssl s_client -connect localhost:443 -prexit
     - name: Run a test
       run: curl -kv --no-progress-meter https://localhost/api/v2/status
     - name: Retrieve logs from Docker
