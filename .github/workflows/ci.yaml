@@ -140,8 +140,9 @@ jobs:
     - name: Start containers
       run: docker-compose -f "docker/docker-compose-for-actions.yml" up -d
     - name: Run a test
-      run: curl -k https://localhost/api/v2/status
+      run: curl -kv --no-progress-meter https://localhost/api/v2/status
     - name: Retrieve logs from Docker
+      if: always()
       run: docker-compose logs
     - name: Stop containers
       if: always()
