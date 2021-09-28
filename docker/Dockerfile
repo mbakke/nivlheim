@@ -22,3 +22,6 @@ RUN chmod -R a+x /var/www/cgi-bin/*
 # entry point
 COPY server/entrypoint.sh /usr/bin/
 CMD /usr/bin/entrypoint.sh
+
+# health check
+HEALTHCHECK --start-period=10s CMD curl -kf https://localhost/cgi-bin/ping || exit 1
