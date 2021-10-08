@@ -115,7 +115,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Docker build
       run: |
-        docker build --file docker/Dockerfile --tag nivlheimwww:latest .
+        docker build --file ci/docker/Dockerfile --tag nivlheimwww:latest .
         docker save nivlheimwww | gzip > nivlheim-www.tar.gz
     - name: Upload artifact
       uses: actions/upload-artifact@v2
