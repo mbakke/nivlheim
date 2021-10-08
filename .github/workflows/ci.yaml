@@ -138,7 +138,7 @@ jobs:
         docker load --input nivlheim-www.tar.gz/nivlheim-www.tar.gz
         docker load --input nivlheim-image.tar.gz/nivlheim-image.tar.gz
     - name: Start containers
-      run: docker-compose -f "docker/docker-compose.yml" up -d
+      run: docker-compose -f "ci/docker/docker-compose.yml" up -d
     - name: SSL handshake
       run: openssl s_client -connect localhost:443 -prexit
       continue-on-error: true
@@ -148,10 +148,10 @@ jobs:
       run: tests/test_cert_handling.sh
     - name: Retrieve logs from Docker
       if: always()
-      run: docker-compose -f "docker/docker-compose.yml" logs
+      run: docker-compose -f "ci/docker/docker-compose.yml" logs
     - name: Stop containers
       if: always()
-      run: docker-compose -f "docker/docker-compose.yml" down
+      run: docker-compose -f "ci/docker/docker-compose.yml" down
 
   # publishwww:
   #   name: Publish
