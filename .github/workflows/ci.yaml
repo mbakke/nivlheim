@@ -87,7 +87,8 @@ jobs:
       run: docker build --file ci/docker/Dockerfile --tag nivlheim-www:latest .
     - name: Docker save
       run: |
-        docker images --digests
+        IMAGE=`docker images | head -2 | tail -1 | awk '{print $3}'`
+        docker inspect $IMAGE
         docker save nivlheim-www | gzip > nivlheim-www.tar.gz
     - name: Upload artifact
       uses: actions/upload-artifact@v2
