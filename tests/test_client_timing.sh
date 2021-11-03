@@ -18,12 +18,8 @@ function printlogs() {
 # tempdir
 tempdir=$(mktemp -d -t tmp.XXXXXXXXXX)
 
-# create a container that's running so we can do "docker exec"
-docker run --rm -d --name banana --network host --entrypoint tail nivlheimclient -f /dev/null
-
 # ensure cleanup
 function finish {
-	docker rm -f banana >/dev/null 2>&1 || true
 	rm -rf "$tempdir"
 }
 trap finish EXIT
@@ -35,7 +31,7 @@ curl -sS -X POST 'http://localhost:4040/api/v2/settings/ipranges' -d 'ipRange=10
 
 # Run the client. This will request a certificate too.
 echo "Running the client"
-if ! docker exec banana nivlheim_client --debug >$tempdir/output 2>&1; then
+if ! nivlheim_client --debug >$tempdir/output 2>&1; then
     echo "The client failed to post data successfully:"
 	echo "--------------------------------------------"
 	cat $tempdir/output
@@ -45,9 +41,9 @@ fi
 
 # test the "minperiod" parameter
 echo 'Testing the "minperiod" parameter'
-docker exec banana bash -c 'mkdir -p /var/run; touch /var/run/nivlheim_client_last_run'
+touch /var/run/nivlheim_client_last_run
 set +e
-docker exec banana nivlheim_client --minperiod 60 --debug >$tempdir/output 2>&1
+nivlheim_client --minperiod 60 --debug >$tempdir/output 2>&1
 if [[ $? -ne 64 ]]; then
 	echo "The minperiod parameter for nivlheim_client had no effect."
 	echo "------------- client output: -----------------"
@@ -55,8 +51,8 @@ if [[ $? -ne 64 ]]; then
 	printlogs
 	exit 1
 fi
-docker exec banana rm -f /var/run/nivlheim_client_last_run
-docker exec banana nivlheim_client --minperiod 60 --debug >$tempdir/output 2>&1
+rm -f /var/run/nivlheim_client_last_run
+nivlheim_client --minperiod 60 --debug >$tempdir/output 2>&1
 if [[ $? -eq 64 ]]; then
 	echo "The minperiod option skips out even if the run file is missing."
 	echo "------------- client output: -----------------"
@@ -68,7 +64,7 @@ set -e
 
 # test the "sleeprandom" parameter
 echo 'Testing the "sleeprandom" parameter'
-docker exec banana nivlheim_client --sleeprandom 5 --debug >$tempdir/output 2>&1
+nivlheim_client --sleeprandom 5 --debug >$tempdir/output 2>&1
 if ! grep -s "sleeping" $tempdir/output; then
 	echo "The sleeprandom parameter for nivlheim_client had no effect."
 	printlogs

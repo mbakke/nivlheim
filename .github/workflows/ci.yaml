@@ -71,11 +71,22 @@ jobs:
           -S /etc/profile=etc/profile
           --with-source=nivlheim=$PWD
           nivlheim
-      - name: Upload artifact
+      - name: Pack the client
+        run: >
+          guix pack --root=nivlheim-client.tar.gz
+          -S /bin=bin
+          --with-source=nivlheim=$PWD
+          nivlheim:client
+      - name: Upload server image
         uses: actions/upload-artifact@v2
         with:
           name: nivlheim-image.tar.gz
           path: nivlheim-image.tar.gz
+      - name: Upload client
+        uses: actions/upload-artifact@v2
+        with:
+          name: nivlheim-client.tar.gz
+          path: nivlheim-client.tar.gz
 
   buildwww:
     name: Build httpd+cgi image
@@ -96,28 +107,9 @@ jobs:
         name: nivlheim-www.tar.gz
         path: nivlheim-www.tar.gz
 
-  buildclient:
-    name: Build client image
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Docker build
-      run: |
-        cp client/client.conf tmp_client.conf
-        echo "server=localhost" >> tmp_client.conf
-        docker build --file ci/docker/client_Dockerfile --tag nivlheimclient:latest .
-        docker save nivlheimclient | gzip > nivlheim-client.tar.gz
-        rm tmp_client.conf
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: nivlheim-client.tar.gz
-        path: nivlheim-client.tar.gz
-
   test-scripts:
     name: Run test scripts
-    needs: [build, buildwww, buildclient]
+    needs: [build, buildwww]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -137,7 +129,12 @@ jobs:
       run: |
         docker load --input nivlheim-www.tar.gz/nivlheim-www.tar.gz
         docker load --input nivlheim-image.tar.gz/nivlheim-image.tar.gz
-        docker load --input nivlheim-client.tar.gz/nivlheim-client.tar.gz
+    - name: Install client
+      run: >
+        tar -xf nivlheim-client.tar.gz/nivlheim-client.tar.gz
+        -C ${{ runner.temp }}
+
+        echo ${{ runner.temp }}/bin >> $GITHUB_PATH
     - name: Start containers
       run: docker-compose -f "ci/docker/docker-compose.yml" up -d
     - name: SSL handshake
@@ -156,7 +153,7 @@ jobs:
 
   test-powershell:
     name: Test Powershell client
-    needs: [build, buildwww, buildclient]
+    needs: [build, buildwww]
     runs-on: windows-latest
     steps:
     - name: Checkout

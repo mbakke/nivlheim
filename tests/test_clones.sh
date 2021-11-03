@@ -24,9 +24,6 @@ function printlogs() {
 # tempdir
 tempdir=$(mktemp -d -t tmp.XXXXXXXXXX)
 
-# create a container that's running so we can do "docker exec"
-docker run --rm -d --name banana --network host --entrypoint tail nivlheimclient -f /dev/null
-
 # ensure cleanup
 function finish {
 	docker rm -f banana >/dev/null 2>&1 || true
@@ -41,7 +38,7 @@ curl -sS -X POST 'http://localhost:4040/api/v2/settings/ipranges' -d 'ipRange=10
 
 # Run the client. This will request a certificate too.
 echo "Running the client"
-if ! docker exec banana nivlheim_client --debug >$tempdir/output 2>&1; then
+if nivlheim_client --debug >$tempdir/output 2>&1; then
     echo "The client failed to post data successfully."
 	echo "---------- client output ------------------------------"
 	cat $tempdir/output
@@ -54,7 +51,7 @@ echo "Nonce 1 = " $(docker exec banana cat /var/nivlheim/nonce)
 docker cp banana:/var/nivlheim/nonce $tempdir/noncecopy
 
 # Run the client again, to verify that the nonce works for normal usage
-if ! docker exec banana nivlheim_client --debug >$tempdir/output 2>&1; then
+if nivlheim_client --debug >$tempdir/output 2>&1; then
 	echo "The client failed to post data successfully the second time."
 	echo "---------- client output ----------------------------------"
 	cat $tempdir/output
@@ -65,7 +62,7 @@ echo "Nonce 2 = " $(docker exec banana cat /var/nivlheim/nonce)
 
 # Pretend that I'm a clone and use the old nonce
 docker cp $tempdir/noncecopy banana:/var/nivlheim/nonce
-if docker exec banana nivlheim_client --debug >$tempdir/output 2>&1; then
+if nivlheim_client --debug >$tempdir/output 2>&1; then
 	echo "It seems the client managed to post data with a copied nonce..."
 	echo "---------- client output ----------------------------------"
 	cat $tempdir/output
