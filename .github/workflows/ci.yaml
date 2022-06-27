@@ -26,6 +26,8 @@ jobs:
       - name: Install dependencies
         run: go get
         working-directory: server/service
+        env:
+          GO111MODULE: "off"
       - name: Test
         run: go test
         working-directory: server/service
