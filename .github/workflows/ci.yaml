@@ -23,6 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
+      - name: Install dependencies
+        run: go get
       - name: Test
         run: go test
         working-directory: server/service
