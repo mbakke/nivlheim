@@ -31,7 +31,7 @@ jobs:
           echo $PWD
           echo $GOPATH
       - name: Install repo to GOPATH
-        run:
+        run: |
           mkdir -p $GOPATH/unioslo/nivlheim
           rsync -a server/service/ $GOPATH/unioslo/nivlheim/
       - name: Install dependencies
