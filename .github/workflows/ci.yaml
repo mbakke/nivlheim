@@ -20,24 +20,34 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+    defaults:
+      run:
+        env:
+          GO111MODULE: "off"
+          GOPATH: "${{ runner.temp }}/go"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
-      - name: Install dependencies
-        run: go get
-        working-directory: server/service
-        env:
-          GO111MODULE: "off"
+      - name: Debug
+        run: |
+          echo $PWD
+          echo $GOPATH
+      - name: Install repo to GOPATH
+        run:
+          mkdir -p $GOPATH/unioslo/nivlheim
+          rsync -a server/service/ $GOPATH/unioslo/nivlheim/
+      #- name: Install dependencies
+      #  run: go get
+      #  working-directory: 
       - name: Test
         run: go test
-        working-directory: server/service
+        working-directory: "${{ runner.temp }}/go/unioslo/nivlheim"
         env:
           NIVLHEIM_PGHOST: localhost
           NIVLHEIM_PGUSER: nivlheim
           NIVLHEIM_PGDATABASE: nivlheim
           NIVLHEIM_PGPASSWORD: postgres
           NIVLHEIM_PGSSLMODE: disable
-          GO111MODULE: "off"
   build:
     name: Build server image
 
