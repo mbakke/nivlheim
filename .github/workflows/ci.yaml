@@ -33,12 +33,12 @@ jobs:
         env:
           GO111MODULE: "off"
           GOPATH: "${{ runner.temp }}/go"
-      - name: Install repo to GOPATH
-        run: |
-          mkdir -p $GOPATH/unioslo/nivlheim
-          rsync -av server/service/ $GOPATH/unioslo/nivlheim/
-        env:
-          GOPATH: "${{ runner.temp }}/go"
+      #- name: Install repo to GOPATH
+      #  run: |
+      #    mkdir -p $GOPATH/unioslo/nivlheim
+      #    rsync -av server/service/ $GOPATH/unioslo/nivlheim/
+      #  env:
+      #    GOPATH: "${{ runner.temp }}/go"
       #- name: Install dependencies
       #  run: go get
       #  working-directory: server/service
