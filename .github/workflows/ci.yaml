@@ -30,10 +30,15 @@ jobs:
         run: |
           echo $PWD
           echo $GOPATH
+        env:
+          GO111MODULE: "off"
+          GOPATH: "${{ runner.temp }}/go"
       - name: Install repo to GOPATH
         run: |
           mkdir -p $GOPATH/unioslo/nivlheim
           rsync -a server/service/ $GOPATH/unioslo/nivlheim/
+        env:
+          GOPATH: "${{ runner.temp }}/go"
       - name: Install dependencies
         run: go get
         working-directory: "${{ runner.temp }}/go/unioslo/nivlheim"
