@@ -3,6 +3,34 @@ on: [push]
 
 name: CI
 jobs:
+  test:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: nivlheim
+          POSTGRES_DB: nivlheim
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test
+        run: go test
+        env:
+          NIVLHEIM_PGHOST: localhost
+          NIVLHEIM_PGUSER: nivlheim
+          NIVLHEIM_PGDATABASE: nivlheim
+          NIVLHEIM_PGPASSWORD: postgres
+          NIVLHEIM_PGSSLMODE: disable
   build:
     name: Build server image
     runs-on: ubuntu-latest
