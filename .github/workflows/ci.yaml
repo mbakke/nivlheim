@@ -25,6 +25,7 @@ jobs:
       - uses: actions/setup-go@v3
       - name: Install dependencies
         run: go get
+        working-directory: server/service
       - name: Test
         run: go test
         working-directory: server/service
