@@ -39,13 +39,13 @@ jobs:
           rsync -av server/service/ $GOPATH/src/unioslo/nivlheim/
         env:
           GOPATH: "${{ runner.temp }}/go"
-      #- name: Install dependencies
-      #  run: go get
-      #  working-directory: server/service
+      - name: Install dependencies
+        run: go get
+        working-directory: server/service
         #working-directory: "${{ runner.temp }}/go/unioslo/nivlheim"
-      #  env:
-      #    GO111MODULE: "off"
-      #    GOPATH: "${{ runner.temp }}/go"
+        env:
+          GO111MODULE: "off"
+          GOPATH: "${{ runner.temp }}/go"
       - name: Install
         run: go install  #-v github.com/unioslo/nivlheim/server/service
         working-directory: server/service
