@@ -37,8 +37,8 @@ jobs:
         run: |
           mkdir -p $GOPATH/src/unioslo/nivlheim
           rsync -av server/service/ $GOPATH/src/unioslo/nivlheim/
-      #  env:
-      #    GOPATH: "${{ runner.temp }}/go"
+        env:
+          GOPATH: "${{ runner.temp }}/go"
       #- name: Install dependencies
       #  run: go get
       #  working-directory: server/service
